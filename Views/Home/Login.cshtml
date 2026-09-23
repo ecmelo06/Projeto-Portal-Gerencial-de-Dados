@@ -1,0 +1,23 @@
+@model LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+
+
+    <form asp-controller="ControllerLogin" asp-action="Buscar" method="post">
+    <div class="form-row" >
+        <div class="form-group col-md-6">
+        <label for="Nome">Usuário</label>
+        <input type="text" asp-for="Email" class="form-control" id="user" >
+        </div>
+        <div class="form-group col-md-6">
+        <label for="password">Senha</label>
+        <input type="password" asp-for="Senha" class="form-control" id="password">
+        </div>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Login</button>
+    <button class="btn btn-primary"><a href="Cadastro" style= "cursor: default; color: inherit; text-decoration: none" >Cadastro</a></button>
+    </form>
+

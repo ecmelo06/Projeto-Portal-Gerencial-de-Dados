@@ -1,0 +1,20 @@
+@model CadastroModel
+
+
+
+
+@{
+    ViewData["Title"] = "Teste";
+}
+
+<div class="text-center">
+    <h1>Bem-Vindo, @Model.Nome</h1>
+
+    <p>E-mail: @Model.Email</p>
+    <p>Órgão: @Model.Orgao</p>
+    <p>Perfil: @Model.Perfil</p>
+</div>
+
+<div>
+    <a asp-action="Logout">Sair</a>
+</div>
