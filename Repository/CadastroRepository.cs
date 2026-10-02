@@ -37,5 +37,9 @@ namespace Project.Repository
            return cadastro;
 
         }
+
+        public bool ExisteEmail(string email){
+            return _bancoContext.Cadastro.Any(u => u.Email == email);
+        }
     }
 }

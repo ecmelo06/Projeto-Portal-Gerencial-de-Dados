@@ -9,5 +9,6 @@ namespace Project.Repository
     public interface ICadastroRepository
     {
         CadastroModel Adicionar(CadastroModel cadastro);
+        bool ExisteEmail(string email); 
     }
 }

@@ -16,16 +16,23 @@ public class ControllerLogin : Controller
         return View("~/Views/Home/Login.cshtml");
     }
 
-    public IActionResult AcessLogin()
-    {
-        string nome = HttpContext.Session.GetString("UsuarioNome");
-        if (nome == null)
-        {
+    public IActionResult AcessLogin(){
+        string email = HttpContext.Session.GetString("UsuarioEmail");
+
+        if (string.IsNullOrEmpty(email)){
             return RedirectToAction("ReturnToLogin");
         }
-        return View("~/Views/UserAcess/Login.cshtml");
-    }
 
+        LoginModel loginTemporario = new LoginModel { Email = email };
+        CadastroModel usuario = _loginRepository.Selecionar(loginTemporario);
+
+        if (usuario == null){
+            TempData["Erro"] = "Usuário não encontrado.";
+            return RedirectToAction("ReturnToLogin");
+        }
+        return View("~/Views/UserAcess/Login.cshtml", usuario);
+    }
+    
     public IActionResult Cadastro()
     {
         return View("~/Views/Home/Cadastro.cshtml");
@@ -51,14 +58,10 @@ public class ControllerLogin : Controller
                 login.Senha))
                 {
                 HttpContext.Session.SetString(
-                    "UsuarioNome", 
-                    usuario.Nome
-                );
-                HttpContext.Session.SetString(
                     "UsuarioEmail", 
                     usuario.Email
-                );
-                return View("~/Views/UserAcess/Login.cshtml",usuario);
+                );               
+                return RedirectToAction("AcessLogin");
             }
             
             else
