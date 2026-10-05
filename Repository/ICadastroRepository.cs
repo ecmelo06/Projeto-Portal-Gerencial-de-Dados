@@ -10,5 +10,8 @@ namespace Project.Repository
     {
         CadastroModel Adicionar(CadastroModel cadastro);
         bool ExisteEmail(string email); 
+
+        
+
     }
 }

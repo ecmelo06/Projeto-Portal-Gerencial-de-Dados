@@ -5,7 +5,6 @@ using Project.Models;
 using Project.Repository;
 using System.Text.RegularExpressions;
 
-
 public class ControllerCadastro : Controller{
     
     private readonly ICadastroRepository _cadastroRepository;
@@ -16,16 +15,6 @@ public class ControllerCadastro : Controller{
         _cadastroRepository = cadastroRepository;   
         
     }
-    public IActionResult Criar()
-    {
-        return View();
-    }
-
-    public IActionResult Index()
-    {
-        return View();
-    }
-
     public IActionResult AcessUser()
     {
         return View("~/Views/Home/Login.cshtml");
@@ -124,7 +113,7 @@ public class ControllerCadastro : Controller{
         }
         _cadastroRepository.Adicionar(cadastro);
             TempData["Sucesso"] ="Usuário cadastrado com sucesso.";
-        return RedirectToAction("AcessUser");
+            return RedirectToAction("AcessUser");
         
     }
 }
