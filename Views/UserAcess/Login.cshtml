@@ -1,18 +1,37 @@
-@model CadastroModel
+@model Project.Models.CadastroModel
+
 @{
-    ViewData["Title"] = "Teste";
+    ViewData["Title"] = "Minha Conta";
+    
+    // Pega a primeira letra do nome (em maiúscula). Se o nome for nulo, usa 'U' de Usuário.
+    string inicialDoNome = !string.IsNullOrWhiteSpace(Model.Nome) 
+        ? Model.Nome.Trim().Substring(0, 1).ToUpper() 
+        : "U";
 }
 
-<div class="text-center">
-    <h1>Bem-Vindo, @Model.Nome</h1>
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+            
+            <!-- AVATAR DINÂMICO COM A INICIAL -->
+            <div class="avatar-inicial mx-auto mb-3">
+                @inicialDoNome
+            </div>
 
-    <p>E-mail: @Model.Email</p>
-    <p>Órgão: @Model.Orgao</p>
-   <p>Perfil: </>@foreach (var perfil in Model.Perfils){
-    <span>@perfil.Nome </span>
-    }</p>
-</div>
+            <h4 class="card-title mb-1">@Model.Nome</h4>
+            <br />
 
-<div>
-    <a asp-action="Logout">Sair</a>
+            <div class="text-start border-top pt-3">
+                <p class="mb-2"><strong>E-mail:</strong> @Model.Email</p>
+                <p class="mb-2"><strong>CPF:</strong> @Model.CPF</p>
+                <p class="mb-3"><strong>Órgão:</strong> @Model.Orgao</p>
+                <p class="mb-3"><strong>Perfil:</strong>@Model.Perfils</p>
+            </div>
+
+            <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                <a asp-action="Logout" class="btn btn-danger btn-sm px-4">Sair</a>
+            </div>
+
+        </div>
+    </div>
 </div>

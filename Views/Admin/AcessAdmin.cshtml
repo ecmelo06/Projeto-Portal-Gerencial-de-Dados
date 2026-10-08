@@ -1,9 +1,41 @@
 @model List<Project.Models.CadastroModel>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Painel Administrativo";
+    
+    string perfisLogado = ViewBag.PerfisUsuarioLogado ?? "";
+    bool souSuperAdmin = perfisLogado.Contains("SuperAdmin");
+
+    
+    string emailSessao = HttpContextAccessor.HttpContext.Session.GetString("UsuarioEmail");
+}
 
 <div class="container mt-5">
-    <h2>Lista de Usuários Cadastrados</h2>
+    
+    <div class="card mb-4 border-primary bg-light">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1 text-primary">Bem-vindo(a) ao Painel</h5>
+                <p class="card-text mb-0">
+                    <strong>Usuário:</strong> @ViewBag.NomeUsuarioLogado &nbsp;|&nbsp; 
+                    <strong>Nível de Acesso:</strong> 
+                    <span class="badge bg-dark">@ViewBag.PerfisUsuarioLogado</span>
+                </p>
+            </div>
+            <div>
+                <a asp-action="Logout" class="btn btn-danger btn-sm px-3">
+                    <i class="bi bi-box-arrow-right me-1"></i>Sair
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <!-- Alertas de Erro ou Sucesso das validações do Controller -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Lista de Usuários Cadastrados</h2>
+    </div>
+
     @if (TempData["Sucesso"] != null)
     {
         <div class="alert alert-success">@TempData["Sucesso"]</div>
@@ -31,7 +63,8 @@
                 {
                     foreach (var usuario in Model)
                     {
-                        bool ehAdmin = usuario.Perfils != null && usuario.Perfils.Any(p => p.Nome == "Admin" || p.Nome == "SuperAdmin");
+                        bool oAlvoEhAdmin = usuario.Perfils != null && usuario.Perfils.Any(p => p.Nome == "Admin" || p.Nome == "SuperAdmin");
+                        bool oAlvoSouEu = usuario.Email == emailSessao;
                         
                         <tr>
                             <td>@usuario.Id</td>
@@ -47,25 +80,46 @@
                                         <span class="badge bg-primary me-1">@perfil.Nome</span>
                                     }
                                 }
-                                else
-                                {
-                                    <span class="text-muted">Nenhum</span>
-                                }
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
+                                    
+                                    <!-- Editar dados básicos: Sempre liberado -->
                                     <a asp-action="Editar" asp-route-id="@usuario.Id" class="btn btn-sm btn-warning">Editar</a>
 
-                                    @if (!ehAdmin)
+                                    @if (oAlvoSouEu)
                                     {
-                                        <a asp-action="TornarAdmin" asp-route-id="@usuario.Id" class="btn btn-sm btn-info text-white">Tornar Admin</a>
-                                        <a asp-action="ExcluirUsuario" asp-route-id="@usuario.Id" 
-                                           onclick="return confirm('Tem certeza que deseja excluir este usuário?')" 
-                                           class="btn btn-sm btn-danger">Excluir</a>
+                                        <!-- Proteção visual: Não permite que você mude ou exclua a sua própria conta logada -->
+                                        <span class="badge bg-secondary p-2 ms-1 align-self-center">Você</span>
                                     }
-                                    else{
-                                        <button class="btn btn-sm btn-secondary" disabled title="Não é possível alterar outro Admin">Protegido</button>
+                                    else if (souSuperAdmin)
+                                    {
+                                        <!-- MODAL TRIGGER: Botão limpo que aciona o Modal de Perfil único por ID -->
+                                        <button type="button" class="btn btn-sm btn-dark ms-1" data-bs-toggle="modal" data-bs-target="#modalPerfil-@usuario.Id">
+                                            Definir Perfil
+                                        </button>
+
+                                        <!-- MODAL TRIGGER: Botão limpo que aciona o Modal de Confirmação de Exclusão -->
+                                        <button type="button" class="btn btn-sm btn-danger ms-1" data-bs-toggle="modal" data-bs-target="#modalExcluir-@usuario.Id">
+                                            Excluir
+                                        </button>
                                     }
+                                    else if (!oAlvoEhAdmin)
+                                    {
+                                        <!-- VISÃO DE ADMIN COMUM: Só pode gerenciar quem não for Admin -->
+                                        <a asp-action="MudarPerfil" asp-route-id="@usuario.Id" asp-route-novoPerfil="Admin" class="btn btn-sm btn-info text-white">Tornar Admin</a>
+                                        
+                                        <!-- MODAL TRIGGER: Botão para o Admin Comum também usar exclusão com modal -->
+                                        <button type="button" class="btn btn-sm btn-danger ms-1" data-bs-toggle="modal" data-bs-target="#modalExcluir-@usuario.Id">
+                                            Excluir
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <!-- Se for Admin comum olhando outro Admin: Bloqueia ações -->
+                                        <button class="btn btn-sm btn-secondary ms-1" disabled title="Apenas o SuperAdmin pode alterar este usuário">Protegido</button>
+                                    }
+
                                 </div>
                             </td>
                         </tr>
@@ -82,8 +136,48 @@
     </div>
 </div>
 
-    
-    <div class="mt-3">
-        <a asp-action="Logout" class="btn btn-danger">Sair</a>
-    </div>
-</div>
+@if (Model != null && Model.Any())
+{
+    foreach (var usuario in Model)
+    {
+        if (usuario.Email != emailSessao)
+        {
+            if (souSuperAdmin)
+            {
+                <div class="modal fade" id="modalPerfil-@usuario.Id" tabindex="-1" aria-labelledby="modalPerfilLabel-@usuario.Id" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-dark text-white">
+                                <h5 class="modal-title" id="modalPerfilLabel-@usuario.Id">Alterar Nível de Acesso</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-start">
+                                <p>Selecione o novo perfil para o usuário <strong>@usuario.Nome</strong>:</p>
+                                <p class="text-muted small">Aviso: Isso removerá os vínculos de acessos antigos e aplicará apenas a nova seleção.</p>
+                                
+                                <div class="d-grid gap-2 mt-3">
+                                    <a asp-action="MudarPerfil" asp-route-id="@usuario.Id" asp-route-novoPerfil="Comum" class="btn btn-outline-secondary text-start px-3">
+                                        <span class="badge bg-secondary me-2">Comum</span> Definir como Usuário Comum
+                                    </a>
+                                    <a asp-action="MudarPerfil" asp-route-id="@usuario.Id" asp-route-novoPerfil="Agergs" class="btn btn-outline-primary text-start px-3">
+                                        <span class="badge bg-primary me-2">Agergs</span> Definir como Perfil Agergs
+                                    </a>
+                                    <a asp-action="MudarPerfil" asp-route-id="@usuario.Id" asp-route-novoPerfil="Externo" class="btn btn-outline-warning text-dark text-start px-3">
+                                        <span class="badge bg-warning text-dark me-2">Externo</span> Definir como Perfil Externo
+                                    </a>
+                                    <div class="border-top my-2"></div>
+                                    <a asp-action="MudarPerfil" asp-route-id="@usuario.Id" asp-route-novoPerfil="Admin" class="btn btn-info text-white text-start px-3">
+                                        <span class="badge bg-dark me-2">Admin</span> Elevar para Administrador
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}

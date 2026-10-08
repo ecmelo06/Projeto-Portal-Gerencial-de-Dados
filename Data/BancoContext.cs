@@ -13,5 +13,6 @@ namespace Project.Data{
 
         //public DbSet<LoginModel> Login{get; set;}
         
+        public DbSet<RecuperacaoSenhaModel> RecuperacaoSenha {get; set;}
     }
 }

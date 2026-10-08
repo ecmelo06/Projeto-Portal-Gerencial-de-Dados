@@ -38,6 +38,29 @@ namespace Project.Repository
                             .ToList();
                 return usuario;
             }
+            public bool AlterarPerfilUsuario(int usuarioId, string nomeNovoPerfil){
+                // 1. Busca o perfil desejado no banco (ex: "Usuario", "Agergs", "Externo")
+                var perfilAlvo = _bancoContext.Perfil.FirstOrDefault(x => x.Nome == nomeNovoPerfil);
+                if (perfilAlvo == null) return false;
+
+                var PerfilsAtuais = _bancoContext.PerfilUsuario.Where(x => x.CadastroId == usuarioId).ToList();
+                if (PerfilsAtuais.Any()){
+                    _bancoContext.PerfilUsuario.RemoveRange(PerfilsAtuais);
+                    _bancoContext.SaveChanges();
+                }
+
+                // 3. Adiciona o novo vínculo único de perfil
+                var novoVinculo = new PerfilUsuario 
+                {
+                    CadastroId = usuarioId,
+                    PerfilId = perfilAlvo.Id
+                };
+
+                _bancoContext.PerfilUsuario.Add(novoVinculo);
+                _bancoContext.SaveChanges();
+                return true;
+            }
+
             public List<CadastroModel> BuscarTodos(){
                 var cadastros = _bancoContext.Cadastro.ToList(); 
 
@@ -62,8 +85,7 @@ namespace Project.Repository
 
         public CadastroModel BuscarPorId(int id){
             var usuario = _bancoContext.Cadastro.FirstOrDefault(x => x.Id == id);
-            if (usuario != null)
-            {
+            if (usuario != null){
                 usuario.Perfils = _bancoContext.PerfilUsuario
                     .Where(pu => pu.CadastroId == usuario.Id)
                     .Join(_bancoContext.Perfil, pu => pu.PerfilId, p => p.Id, (pu, p) => new PerfilModel { Nome = p.Nome })
@@ -124,6 +146,45 @@ namespace Project.Repository
             _bancoContext.SaveChanges();
             return true;
         }
+
+        public void SalvarCodigoRecuperacao(string email, string codigo){
+            // Remove códigos antigos pendentes desse e-mail se houver
+            var antigos = _bancoContext.RecuperacaoSenha.Where(x => x.Email == email);
+            _bancoContext.RecuperacaoSenha.RemoveRange(antigos);
+
+            var novaRecuperacao = new RecuperacaoSenhaModel
+            {
+                Email = email,
+                Codigo = codigo,
+                DataExpiracao = DateTime.Now.AddMinutes(15) // Código válido por 15 minutos
+            };
+
+            _bancoContext.RecuperacaoSenha.Add(novaRecuperacao);
+            _bancoContext.SaveChanges();
+        }
+
+        public bool ValidarCodigo(string email, string codigo){
+            return _bancoContext.RecuperacaoSenha.Any(x => 
+                x.Email == email && 
+                x.Codigo == codigo && 
+                x.DataExpiracao > DateTime.Now);
+        }
+
+        public void AtualizarSenha(string email, string novaSenhaHash){
+            var usuario = _bancoContext.Cadastro.FirstOrDefault(x => x.Email == email);
+            if (usuario != null)
+            {
+                usuario.Senha = novaSenhaHash; // Deve passar a senha já criptografada com HashHelper
+                _bancoContext.Cadastro.Update(usuario);
+                
+                // Limpa o código usado
+                var codigoUsado = _bancoContext.RecuperacaoSenha.Where(x => x.Email == email);
+                _bancoContext.RecuperacaoSenha.RemoveRange(codigoUsado);
+
+                _bancoContext.SaveChanges();
+            }
+        }
+
     }
 
 
