@@ -87,3 +87,53 @@ Models/
 Repository/
 Views/
 wwwroot/
+```
+
+## Como utilizar
+
+Siga as instruções abaixo para baixar, configurar e executar o projeto localmente em seu ambiente de desenvolvimento.
+
+### 1. Clonar o Projeto
+Abra o seu terminal ou prompt de comando na pasta onde costuma armazenar seus projetos e faça o clone deste repositório:
+```bash
+git clone https://github.com/ecmelo06/Projeto-Portal-Gerencial-de-Dados
+```
+
+Entre no diretório raiz do sistema:
+```bash
+cd Projeto-Portal-Gerencial-de-Dados
+```
+
+### 2. Configurar a String de Conexão
+Abra o projeto na sua IDE (Visual Studio ou VS Code) e localize o arquivo **`appsettings.json`**. Atualize a conexão para apontar para o seu servidor SQL Server local:
+```json
+"ConnectionStrings": {
+    "BancoContext": "Server=SEU_SERVIDOR_SQL;Database=PortalGerencialDB;Trusted_Connection=True;TrustServerCertificate=True;"
+}
+```
+
+### 3. Restaurar as Dependências
+Execute o comando abaixo para baixar e restaurar todas as bibliotecas do .NET Core e do Entity Framework gerenciadas pelo NuGet:
+```bash
+dotnet restore
+```
+
+### 4. Executar as Migrations do Banco de Dados
+O projeto já conta com o mapeamento e com a carga automática (Seed) dos perfis de acesso. Para criar o banco físico local e estruturar todas as tabelas com os dados iniciais preenchidos, execute:
+
+```bash
+# Instala a ferramenta global do EF Core (caso seu ambiente não possua):
+dotnet tool install --global dotnet-ef
+
+# Executa o histórico de migrations e popula os perfis automaticamente:
+dotnet ef database update
+```
+> *Nota: Após a conclusão deste comando, as tabelas estarão prontas e a tabela `Perfil` já conterá os registros de **Admin**, **AGERGS**, **Comum**, **Externo** e **SuperAdmin** vinculados de forma automática.*
+
+### 5. Rodar a Aplicação
+Inicie o servidor embutido do ASP.NET Core:
+```bash
+dotnet run
+```
+Abra o seu navegador e acesse a URL local indicada no terminal:
+**`http://localhost:5202`**
