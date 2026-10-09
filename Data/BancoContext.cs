@@ -14,5 +14,18 @@ namespace Project.Data{
         //public DbSet<LoginModel> Login{get; set;}
         
         public DbSet<RecuperacaoSenhaModel> RecuperacaoSenha {get; set;}
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PerfilModel>().HasData(
+                new PerfilModel {Id = 1, Nome="Admin"},
+                new PerfilModel {Id = 2, Nome="AGERGS"},
+                new PerfilModel {Id = 3, Nome="Admin"},
+                new PerfilModel {Id = 4, Nome="Externo"},
+                new PerfilModel {Id = 5, Nome="SuperAdmin"}
+            );
+        }
     }
 }
